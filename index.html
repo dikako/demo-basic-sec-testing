@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Security Simulator: Bugs vs Not Bugs</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background: #eee;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tab.active {
+            background: white;
+            border-color: #ddd;
+            border-bottom: 2px solid white;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Simulation Elements */
+        .browser-bar {
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+        }
+
+        .browser-bar span {
+            margin-right: 10px;
+            color: #666;
+        }
+
+        .browser-bar input {
+            flex-grow: 1;
+            padding: 5px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .browser-bar button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+
+        .response-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            font-family: monospace;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .sql-box {
+            background: #282c34;
+            color: #61dafb;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 5px solid #e06c75;
+        }
+
+        .alert-box {
+            background: #ffdddd;
+            border-left: 6px solid #f44336;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 6px solid #17a2b8;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #0c5460;
+        }
+
+        /* Form Elements */
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button.action-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button.action-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .comment-display {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .highlight {
+            color: #e06c75;
+            font-weight: bold;
+        }
+
+        .danger-text {
+            color: #ff4444;
+            font-weight: bold;
+            border-bottom: 1px dashed #ff4444;
+        }
+
+        /* TOGGLE SWITCH STYLES */
+        .mode-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #eee;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-left: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e74c3c;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #27ae60;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        .mode-label {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-text {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>QA Security Training Simulator</h1>
+        <p>Compare "Vulnerable Code" (Bug) vs "Secure Code" (Not Bug)</p>
+    </header>
+
+    <div class="container">
+
+        <div class="mode-container">
+            <div class="mode-label">
+                Current Application Mode: <span id="mode-text" class="status-text" style="color: #e74c3c;">VULNERABLE
+                    (Has Bugs)</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="security-toggle" onclick="toggleSecurity()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('tab-login')">1. Data Exposure</div>
+            <div class="tab" onclick="switchTab('tab-idor')">2. IDOR (Insecure Direct Object Reference)</div>
+            <div class="tab" onclick="switchTab('tab-xss')">3. XSS (Cross Site Scripting)</div>
+            <div class="tab" onclick="switchTab('tab-sqli')">4. SQL Injection</div>
+        </div>
+
+        <div id="tab-login" class="tab-content active">
+            <h2>Scenario B: Sensitive Data Exposure</h2>
+            <div class="info-box">
+                <strong>Test:</strong> Login and inspect the Network Response (F12) or the box below.
+                <br>🔴 <strong>Vulnerable:</strong> Returns SSN & Passwords (hidden in JSON).
+                <br>🟢 <strong>Secure:</strong> Returns only Username & Role (Clean JSON).
+            </div>
+
+            <div style="max-width: 400px; margin: auto;">
+                <label>Username (guest)</label>
+                <input type="text" id="login-user" value="guest">
+                <label>Password (12345)</label>
+                <input type="password" id="login-pass" value="12345">
+                <button class="action-btn" onclick="simulateLoginWithRealXHR()">Login</button>
+            </div>
+
+            <h3>API Response Preview:</h3>
+            <div id="network-log" class="response-box" style="font-size: 14px;">// Waiting for login...</div>
+        </div>
+
+        <div id="tab-idor" class="tab-content">
+            <h2>Scenario A: Broken Access Control (IDOR)</h2>
+            <div class="info-box">
+                <strong>Test:</strong> You are logged in as ID 101. Change URL to ID 102.
+                <br>🔴 <strong>Vulnerable:</strong> Displays User 102's private data.
+                <br>🟢 <strong>Secure:</strong> Shows "403 Forbidden" Access Denied.
+            </div>
+
+            <div class="browser-bar">
+                <span>Address:</span>
+                <input type="text" id="idor-url" value="myapp.com/user/view?id=101">
+                <button onclick="loadProfile()">Go</button>
+            </div>
+
+            <div id="profile-display" style="border: 1px solid #ccc; padding: 20px; border-radius: 5px;">
+                <h3>User Profile</h3>
+                <p><strong>Name:</strong> <span id="p-name">Alice (User 101)</span></p>
+                <p><strong>Email:</strong> <span id="p-email">alice@company.com</span></p>
+                <p><strong>Private Note:</strong> <span id="p-note">"I love my cat."</span></p>
+            </div>
+        </div>
+
+        <div id="tab-xss" class="tab-content">
+            <h2>Scenario C: Stored XSS</h2>
+            <div class="info-box">
+                <strong>Test:</strong> Enter payload: <code>&lt;img src=x onerror=alert('HACKED')&gt;</code>
+                <br>🔴 <strong>Vulnerable:</strong> Browser Alert Box pops up (Code executed).
+                <br>🟢 <strong>Secure:</strong> The text is displayed literally (Code sanitized).
+            </div>
+
+            <label>Write a comment:</label>
+            <textarea id="xss-input" rows="3" placeholder="Enter payload here..."></textarea>
+            <button class="action-btn" onclick="postComment()">Submit Comment</button>
+
+            <h3>Comments Feed:</h3>
+            <div id="comments-section">
+                <div class="comment-display"><strong>System:</strong> Welcome to the blog!</div>
+            </div>
+        </div>
+
+        <div id="tab-sqli" class="tab-content">
+            <h2>Scenario D: SQL Injection (Login Bypass)</h2>
+            <div class="info-box">
+                <strong>Context:</strong> A login form vulnerable to SQL Injection.<br>
+                <strong>Backend Logic (Hidden):</strong>
+                <code>SELECT * FROM users WHERE username = '[USER]' AND password = '[PASS]'</code><br>
+                <strong>Test:</strong> Try to login as <code>admin</code> without knowing the password.<br>
+                <strong>Attack Payload:</strong> User: <code>admin' --</code> (Bypass password check)<br>
+                <br>🔴 <strong>Vulnerable:</strong> Logs you in as Admin!
+                <br>🟢 <strong>Secure:</strong> "Invalid Credentials" (treated as username "admin' --").
+            </div>
+
+            <div style="max-width: 400px; margin: auto;">
+                <label>Username</label>
+                <input type="text" id="sqli-user" value="admin' --">
+                <label>Password</label>
+                <input type="text" id="sqli-pass" placeholder="(Leave empty)">
+                <button class="action-btn" onclick="runSQLiLogin()">Login</button>
+            </div>
+
+            <h3>Login Status:</h3>
+            <div id="sql-result" class="response-box" style="height: 100px;">// Waiting...</div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GLOBAL SETTINGS ---
+        let isSecureMode = false; // Default: Vulnerable
+
+        function toggleSecurity() {
+            const toggle = document.getElementById('security-toggle');
+            const text = document.getElementById('mode-text');
+
+            isSecureMode = toggle.checked;
+
+            if (isSecureMode) {
+                text.innerText = "SECURE (Bugs Fixed)";
+                text.style.color = "#27ae60";
+            } else {
+                text.innerText = "VULNERABLE (Has Bugs)";
+                text.style.color = "#e74c3c";
+            }
+
+            // Reset Displays
+            document.getElementById('network-log').innerText = "// Waiting for login...";
+            document.getElementById('comments-section').innerHTML = '<div class="comment-display"><strong>System:</strong> Welcome to the blog!</div>';
+            document.getElementById('sql-result').innerText = "// Waiting...";
+            document.getElementById('profile-display').innerHTML = '<h3>User Profile</h3><p><strong>Name:</strong> <span id="p-name">Alice (User 101)</span></p><p><strong>Email:</strong> <span id="p-email">alice@company.com</span></p><p><strong>Private Note:</strong> <span id="p-note">"I love my cat."</span></p>';
+        }
+
+        // --- DATABASE MOCK ---
+        const database = {
+            users: {
+                "101": { name: "Alice", email: "alice@company.com", note: "I love my cat.", role: "user" },
+                "102": { name: "Bob (Admin)", email: "bob@admin.com", note: "CONFIDENTIAL: Admin Password is 'SuperSecret'", role: "admin" }
+            },
+            auth_db: {
+                "guest": {
+                    id: 101,
+                    username: "guest",
+                    role: "user",
+                    password_hash: "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+                    ssn: "999-00-1234",
+                    is_admin: false
+                },
+                "admin": {
+                    id: 102,
+                    username: "admin",
+                    role: "admin",
+                    password_hash: "sha256:supersecret",
+                    ssn: "000-00-0000",
+                    is_admin: true
+                }
+            },
+            full_user_table: [
+                { id: "101", user: "Alice", secret: "I love cats" },
+                { id: "102", user: "Bob_Admin", secret: "SUPER_SECRET_ADMIN_PASSWORD" },
+                { id: "103", user: "Charlie", secret: "My dog's name is Rex" }
+            ],
+            products: [
+                { id: 1, name: "Apple iPhone 15", category: "Mobile", price: 999, is_released: 1 },
+                { id: 2, name: "Samsung Galaxy S24", category: "Mobile", price: 899, is_released: 1 },
+                { id: 3, name: "Sony Headphones", category: "Audio", price: 199, is_released: 1 },
+                { id: 4, name: "Unreleased AR Glasses (Prototype)", category: "Secret", price: 2999, is_released: 0 },
+                { id: 5, name: "Dev Device 2026", category: "Secret", price: 0, is_released: 0 }
+            ]
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            const tabs = document.querySelectorAll('.tab');
+            if (tabId === 'tab-login') tabs[0].classList.add('active');
+            if (tabId === 'tab-idor') tabs[1].classList.add('active');
+            if (tabId === 'tab-xss') tabs[2].classList.add('active');
+            if (tabId === 'tab-sqli') tabs[3].classList.add('active');
+        }
+
+        // --- 1. DATA EXPOSURE LOGIC ---
+        function simulateLoginWithRealXHR() {
+            const user = document.getElementById('login-user').value;
+            const logBox = document.getElementById('network-log');
+            logBox.innerHTML = '<span style="color: yellow;">Simulating Request...</span>';
+
+            let responseData = {};
+
+            // LOGIC CHECK: SECURE VS VULNERABLE
+            if (database.auth_db[user]) {
+                const rawUser = database.auth_db[user];
+
+                if (isSecureMode) {
+                    // SECURE: Create a DTO (Data Transfer Object) - Only necessary fields
+                    responseData = {
+                        id: rawUser.id,
+                        username: rawUser.username,
+                        role: rawUser.role,
+                        is_admin: rawUser.is_admin
+                    };
+                } else {
+                    // VULNERABLE: Send the whole DB object
+                    responseData = rawUser;
+                }
+            } else {
+                responseData = { "error": "Invalid credentials" };
+            }
+
+            // Prepare Real XHR
+            const jsonString = JSON.stringify(responseData, null, 4);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            fetch(url).then(res => res.json()).then(data => {
+                if (!isSecureMode && data.password_hash) {
+                    const htmlOutput = `{
+    "id": ${data.id},
+    "username": "${data.username}",
+    <span class="danger-text">"password_hash": "${data.password_hash}"</span>,
+    <span class="danger-text">"ssn": "${data.ssn}"</span>,
+    "is_admin": ${data.is_admin}
+}`;
+                    logBox.innerHTML = htmlOutput;
+                } else {
+                    logBox.innerText = JSON.stringify(data, null, 4);
+                }
+            });
+        }
+
+        // --- 2. IDOR LOGIC ---
+        function loadProfile() {
+            const urlInput = document.getElementById('idor-url').value;
+            let requestedId = "101";
+            try {
+                const urlObj = new URL("http://" + urlInput);
+                requestedId = urlObj.searchParams.get("id");
+            } catch (e) { alert("Invalid URL"); return; }
+
+            const loggedInUser = "101"; // We assume current session is User 101
+
+            // LOGIC CHECK: SECURE VS VULNERABLE
+            if (isSecureMode) {
+                // SECURE: Check Authorization
+                if (requestedId !== loggedInUser) {
+                    document.getElementById('profile-display').innerHTML = '<h3 style="color: red;">403 Forbidden</h3><p>You are not authorized to view this profile.</p>';
+                    return; // Stop execution
+                }
+            }
+
+            // VULNERABLE: Just load data based on ID
+            const userData = database.users[requestedId];
+            if (userData) {
+                document.getElementById('p-name').innerText = userData.name;
+                document.getElementById('p-email').innerText = userData.email;
+                document.getElementById('p-note').innerText = userData.note;
+                document.getElementById('p-note').style.color = (requestedId === "102") ? "red" : "black";
+            } else {
+                alert("User not found.");
+            }
+        }
+
+        // --- 3. XSS LOGIC ---
+        function postComment() {
+            const input = document.getElementById('xss-input').value;
+            const commentsSection = document.getElementById('comments-section');
+            const newComment = document.createElement("div");
+            newComment.className = "comment-display";
+
+            // LOGIC CHECK: SECURE VS VULNERABLE
+            if (isSecureMode) {
+                // SECURE: treat input as Text only (Escaping)
+                newComment.textContent = "User: " + input;
+            } else {
+                // VULNERABLE: treat input as HTML
+                newComment.innerHTML = "<strong>User:</strong> " + input;
+            }
+
+            commentsSection.appendChild(newComment);
+            document.getElementById('xss-input').value = "";
+        }
+
+        // --- 4. SQLi LOGIC ---
+        function runSQLiLogin() {
+            const user = document.getElementById('sqli-user').value;
+            const pass = document.getElementById('sqli-pass').value;
+            const resultDisplay = document.getElementById('sql-result');
+
+            // LOGIC CHECK: SECURE VS VULNERABLE
+            if (isSecureMode) {
+                // SECURE: Strict Comparison
+                const dbUser = database.auth_db[user];
+                // Hardcoded check for demo purposes (usually would be hash check)
+                if (dbUser && ((user === "admin" && pass === "supersecret") || (user === "guest" && pass === "12345"))) {
+                    resultDisplay.innerHTML = `<span style="color: #27ae60; font-weight: bold;">Login Successful! Welcome, ${dbUser.role}.</span>`;
+                } else {
+                    resultDisplay.innerHTML = `<span style="color: #e74c3c;">Invalid Credentials.</span>`;
+                }
+            } else {
+                // VULNERABLE: Simulation of SQL Bypass
+
+                // 1. Password Bypass: admin' --
+                if (user.includes("' --") || user.includes("'--")) {
+                    const cleanUser = user.split("'")[0];
+                    if (database.auth_db[cleanUser]) {
+                        resultDisplay.innerHTML = `<span style="color: red; font-weight: bold;">[SQLi SUCCESS] Login Successful! Welcome, ${cleanUser} (Password Check Bypassed).</span>`;
+                        return;
+                    }
+                }
+
+                // 2. Tautology Bypass: ' OR '1'='1
+                if (user.includes("' OR '1'='1") || user.includes("' OR 1=1")) {
+                    const firstUser = database.auth_db["guest"];
+                    resultDisplay.innerHTML = `<span style="color: red; font-weight: bold;">[SQLi SUCCESS] Login Successful! Welcome, ${firstUser.username} (First User in Table).</span>`;
+                    return;
+                }
+
+                // Normal Login (Vulnerable Mode also works normally if no attack)
+                const dbUser = database.auth_db[user];
+                if (dbUser && ((user === "admin" && pass === "supersecret") || (user === "guest" && pass === "12345"))) {
+                    resultDisplay.innerHTML = `<span style="color: #27ae60; font-weight: bold;">Login Successful! Welcome, ${dbUser.role}.</span>`;
+                } else {
+                    resultDisplay.innerHTML = `<span style="color: #e74c3c;">Invalid Credentials.</span>`;
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
