@@ -38,14 +38,5 @@ The simulator covers four major security flaws commonly found in web application
 ### Run Locally
 Simply open `index.html` in any web browser. No server or backend installation required! The "backend" and "database" are simulated entirely in JavaScript for training purposes.
 
-### Deploy to GitHub Pages
-1.  Push this file to a GitHub repository.
-2.  Go to **Settings > Pages**.
-3.  Select your branch (e.g., `main`) and save.
-4.  Your site will be live at `https://your-username.github.io/repo-name/`.
-
-### Custom Domain (Optional)
-If you own a domain (e.g., `dikacore.dev`), you can configure a subdomain (e.g., `demo.dikacore.dev`) in the GitHub Pages settings and add a `CNAME` record in your DNS provider pointing to your GitHub Pages URL.
-
 ## 📝 License
 Free to use for educational and training purposes.
